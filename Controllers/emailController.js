@@ -1,17 +1,16 @@
 const axios = require("axios");
-const mimemessage = require("mimemessage");
 const { parseBatchResponse } = require("../utils/parsing");
 const { parseEmail } = require("../utils/parseBody");
 module.exports.getEmails = async function (req, res) {
   const { page } = req.query;
 
   console.log();
-  const access_token = req.headers.cookie;
-  const at = access_token.split("=")[1];
+  const access_token = req.userId;
+
   const emails = await axios.get(
     "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=1",
     {
-      headers: { Authorization: `Bearer ${at}` },
+      headers: { Authorization: `Bearer ${access_token}` },
     }
   );
   // const readEmail = await emails.json;
@@ -27,45 +26,21 @@ module.exports.getEmails = async function (req, res) {
   });
 
   body += `--${batchboundry}--\r\n`;
-  // console.log(body);
-  // const email = await axios.get(
-  //   `https://www.googleapis.com/gmail/v1/users/me/messages/1955b8e9df7ba25d`,
-  //   {
-  //     headers: { Authorization: `Bearer ${at}` },
-  //   }
-  // );
   const response = await axios.post(
     "https://www.googleapis.com/batch/gmail/v1", // Gmail batch endpoint
     body,
     {
       headers: {
-        Authorization: `Bearer ${at}`,
+        Authorization: `Bearer ${access_token}`,
         "Content-Type": `multipart/mixed; boundary=${batchboundry}`, // Corrected boundary
       },
     }
   );
 
-  const contentType = response.headers["content-type"];
-
-  // 🔹 Parse the multipart response
-  // console.log(response.data);
   const parsedMessages = await parseBatchResponse(response.data);
   console.log("Parsed Messages:", parsedMessages);
   const lets = parseEmail(parsedMessages);
   console.log(lets);
-
-  // const parsedData = parseBatchResponse(response.data);
-  // for (const part of parsedData.body) {
-  //   console.log("part headers: ", part.header);
-  //   console.log("part boyd: ", part.body.toString());
-  // }
-  // console.log("what the fuck is this", parsedData);
-  // const names = response.data.parts.map((ele) => {
-  //   const finaldata = JSON.parse(ele.body);
-  //   console.log(finaldata);
-  // }); // Get raw response as text
-
-  // Extract JSON from the multipart response
 
   res.json({ name: "i don't know" });
 };

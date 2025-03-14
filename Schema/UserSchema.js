@@ -22,6 +22,17 @@ const userSchema = mongoose.Schema({
     required: [true, "Refresh token is required"],
     minlength: [15, "At least 15 characters are required for refresh token"],
   },
+  picture: {
+    type: String,
+    required: [true, "image is required"],
+  },
+  linkedAccounts: [
+    {
+      email: {
+        type: String,
+      },
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);
