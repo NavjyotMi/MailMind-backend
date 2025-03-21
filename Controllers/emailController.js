@@ -8,13 +8,13 @@ module.exports.getEmails = async function (req, res) {
   const access_token = req.userId;
 
   const emails = await axios.get(
-    "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=1",
+    "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=6",
     {
       headers: { Authorization: `Bearer ${access_token}` },
     }
   );
   // const readEmail = await emails.json;
-  console.log("this is email ", emails.data);
+  // console.log("this is email ", emails.data);
   const batchboundry = `batch_boundary`;
   let body = "";
   emails.data.messages.forEach((ele) => {
@@ -36,11 +36,12 @@ module.exports.getEmails = async function (req, res) {
       },
     }
   );
+  console.log(response);
 
   const parsedMessages = await parseBatchResponse(response.data);
-  console.log("Parsed Messages:", parsedMessages);
+  // console.log("Parsed Messages:", parsedMessages);
   const lets = parseEmail(parsedMessages);
-  console.log(lets);
+  // console.log(lets);
 
-  res.json({ name: "i don't know" });
+  res.json({ email: lets });
 };

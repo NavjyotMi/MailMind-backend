@@ -45,7 +45,7 @@ module.exports.LoginUser = async (req, res) => {
         picture: user.picture,
       };
       // console.log(newUser);
-      const u = await User.create(newUser);
+      await User.create(newUser);
       // console.log("User doesn't exist");
     } else {
       await User.findByIdAndUpdate(userExist._id, {
@@ -143,7 +143,7 @@ module.exports.addAccount = async function (req, res) {
       refreshToken: data.refreshToken,
     };
     await LinkedAccount.create(obj);
-    res.redirect("http://localhost:5173/home");
+    return res.redirect("http://localhost:5173/home");
   } catch (error) {
     console.log(error);
   }
