@@ -4,6 +4,11 @@ const { encryptedToken, decryptedToken } = require("../utils/tokenSecurity");
 const { createJwt } = require("../utils/jwtutility");
 const getAccessToken = require("../utils/refreshToken");
 const LinkedAccount = require("../Schema/LinkedAccountSchema");
+const {
+  accessTokenQueue,
+  addAccessTokenQueue,
+} = require("../Queues/accessTokenQueue");
+const redisClient = require("../Redis");
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -76,7 +81,15 @@ module.exports.LoginUser = async (req, res) => {
 module.exports.getUser = async function (req, res) {
   try {
     const email = req.email;
+    let access_token = req.userId;
+    console.log("this is get user token", access_token);
     const user = await User.findOne({ email: email }).select("-refreshToken");
+    for (const element of user.linkedAccounts) {
+      addAccessTokenQueue({ email: element.email });
+    }
+    await redisClient.set(`accesstoken:${email}`, access_token);
+    await redisClient.expire(`accesstoken:${email}`, 900);
+
     res.status(200).json(user);
   } catch (error) {
     console.log(error);
@@ -84,9 +97,9 @@ module.exports.getUser = async function (req, res) {
 };
 
 module.exports.addAccountRoute = function (req, res) {
-  console.log("is the request evern reaching to add account");
+  // console.log("is the request evern reaching to add account");
   const email = req.email;
-  console.log(email);
+  // console.log(email);
   return res.json({
     redirecturi: `https://accounts.google.com/o/oauth2/auth?client_id=125466525384-cdvft8moir56fj66b8jhmgn6lm52c82u.apps.googleusercontent.com&redirect_uri=http://localhost:5000/api/v1/auth/google/add-account&response_type=code&scope=email%20profile%20https://www.googleapis.com/auth/gmail.readonly&access_type=offline&prompt=consent&state=${encodeURIComponent(
       email
