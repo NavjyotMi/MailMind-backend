@@ -7,7 +7,7 @@ const emailWorker = new Worker(
   "emailQueue",
   async (job) => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    // console.log(job.data.allEmails);
+    // console.log("coming from the email worker", job.data.allEmails);
     const allEmail = job.data.allEmails
       .map(
         (ele) =>
@@ -50,7 +50,9 @@ const emailWorker = new Worker(
       console.error("Failed to extract JSON from AI response:", response.text);
       return;
     }
-
+    console.log(
+      "this is from emailWorker: the email has been succesfully categorized"
+    );
     const jsonString = jsonMatch[1].trim();
 
     try {
@@ -77,7 +79,7 @@ const emailWorker = new Worker(
         ...processedEmails.map((ele) => JSON.stringify(ele))
       );
       await redisClient.expire(`emailCategory:${job.data.emaila}`, 900);
-      // console.log("okay the length is ", length);
+      console.log("okay the length is ", length);
     } catch (error) {
       console.error("Error parsing JSON:", error.message);
     }

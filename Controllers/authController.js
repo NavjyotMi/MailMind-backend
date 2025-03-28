@@ -4,16 +4,13 @@ const { encryptedToken, decryptedToken } = require("../utils/tokenSecurity");
 const { createJwt } = require("../utils/jwtutility");
 const getAccessToken = require("../utils/refreshToken");
 const LinkedAccount = require("../Schema/LinkedAccountSchema");
-const {
-  accessTokenQueue,
-  addAccessTokenQueue,
-} = require("../Queues/accessTokenQueue");
+const { addAccessTokenQueue } = require("../Queues/accessTokenQueue");
 const redisClient = require("../Redis");
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = "http://localhost:5000/api/v1/auth/google/callback";
-
+// console.log
 // Step 1: Exchange auth code for tokens
 module.exports.LoginUser = async (req, res) => {
   const code = req.query.code;
@@ -49,9 +46,8 @@ module.exports.LoginUser = async (req, res) => {
         refreshToken: refreshtoken,
         picture: user.picture,
       };
-      // console.log(newUser);
+
       await User.create(newUser);
-      // console.log("User doesn't exist");
     } else {
       await User.findByIdAndUpdate(userExist._id, {
         refreshToken: refreshtoken,
@@ -68,8 +64,7 @@ module.exports.LoginUser = async (req, res) => {
       secure: false,
       sameSite: "Lax",
     });
-    // res.json({ user, id_token, jwt });
-    // console.log("Set-Cookie Header:", res.getHeaders()["set-cookie"]);
+
     res.redirect("http://localhost:5173/home");
   } catch (err) {
     console.log(err);
@@ -82,7 +77,7 @@ module.exports.getUser = async function (req, res) {
   try {
     const email = req.email;
     let access_token = req.userId;
-    console.log("this is get user token", access_token);
+
     const user = await User.findOne({ email: email }).select("-refreshToken");
     for (const element of user.linkedAccounts) {
       addAccessTokenQueue({ email: element.email });

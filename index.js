@@ -22,17 +22,6 @@ app.use(
 
 connectDb();
 
-// Test adding a job
-// async function testJob() {
-//   await emailQueue.add("categorized-email", {
-//     emailId: "test123",
-//     text: "This is a test email",
-//   });
-//   console.log("✅ Job added to queue!");
-// }
-
-// testJob();
-
 app.use("/api/v1", Routes);
 
 app.listen(5000, () => {
