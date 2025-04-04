@@ -4,14 +4,14 @@ const { parseEmail } = require("../utils/parseBody");
 const { parseBatchResponse } = require("../utils/parsing");
 const { addToEmailQueue } = require("./emailQueue");
 
-module.exports.fetchAndPush = async function (email, nextPageToken) {
+module.exports.fetchAndPush = async function (email, nextPageToken, userId) {
   console.log("fetch and push");
   // fetch the access token
   // console.log("now the email account is ", email);
   const access_token = await redisClient.get(`accesstoken:${email}`);
   // modify the url based on nextpagetoken
   let GMAIL_URL =
-    "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=1";
+    "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=10";
   if (nextPageToken != 0) {
     GMAIL_URL = `${GMAIL_URL}&pageToken=${nextPageToken}`;
   }
@@ -30,7 +30,7 @@ module.exports.fetchAndPush = async function (email, nextPageToken) {
   // get the nextpagetoken if there is any
   if (emails?.data?.nextPageToken) npt = emails.data.nextPageToken;
 
-  console.log(`this is ${email} and nextpage is ${emails.data.nextPageToken}`);
+  // console.log(`this is ${email} and nextpage is ${emails.data.nextPageToken}`);
   // console.log(emails.data.messages);
   // create the mime batch request
   const batchboundry = `batch_boundary`;
@@ -61,9 +61,10 @@ module.exports.fetchAndPush = async function (email, nextPageToken) {
   // parse the body
   const parsedMessages = await parseBatchResponse(response.data);
   let finalData = parseEmail(parsedMessages);
-  console.log(finalData);
+  // console.log(finalData);
   // add the email to the queue
-  // addToEmailQueue({ emaila: email, allEmails: finalData });
+  addToEmailQueue({ emaila: email, allEmails: finalData, userId });
+
   // return the nextpagetoken
   return npt;
 };

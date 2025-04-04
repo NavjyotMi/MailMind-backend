@@ -4,13 +4,13 @@ const { parseEmail } = require("../utils/parseBody");
 const redisClient = require("../Redis");
 const { addToEmailQueue } = require("../Queues/emailQueue");
 const { fetchAndPush } = require("../Queues/fetchAndPush");
-console.log;
+// console.log;
 module.exports.getEmails = async function (req, res) {
   try {
     const { page } = req.query;
     let { email } = req.query;
-    const mainEmail = req.email.trim();
     email = decodeURIComponent(email).trim();
+    const mainEmail = req.email.trim();
     let access_token = req.userId;
     let finalData = null;
     if (mainEmail != email) {
@@ -23,7 +23,7 @@ module.exports.getEmails = async function (req, res) {
       // fetches the message id
       const emails = await axios
         .get(
-          "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=1",
+          "https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=20",
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -32,7 +32,7 @@ module.exports.getEmails = async function (req, res) {
           console.log("there is some err");
         });
       if (!emails?.data.messages || emails.data.messages.length === 0) {
-        return res.json({ email: [] }); // No emails found
+        return res.json({ email: [] });
       }
       // if there is next token then we will store it inside the redis
       if (emails.data.nextPageToken) {
@@ -147,16 +147,16 @@ module.exports.getSingleEmail = async function (req, res) {
 // };
 
 module.exports.categorizeEmails = async function (req, res) {
-  const { email } = req.body;
-
+  const emailList = req.body.body.emailList;
+  const userId = req.email;
+  console.log(emailList);
+  console.log(req.body);
   let emailArray = [];
   let totalround = 5;
-
   // constructs the array of object which has email round and nexpagetoken
-  // console.log(email[0]);
-  const nextPageToken = await redisClient.get(`nextPageToken:${email[0]}`);
-  // const access_token = await redisClient.get(`accesstoken:${email[0]}`);
-  for (const element of email) {
+
+  for (const element of emailList) {
+    const nextPageToken = await redisClient.get(`nextPageToken:${element}`);
     emailArray.push({
       email: element,
       round: nextPageToken ? 1 : 0,
@@ -164,8 +164,7 @@ module.exports.categorizeEmails = async function (req, res) {
     });
   }
   const queue = [...emailArray];
-  // console.log("the categorization route is hit multiple times");
-
+  console.log("the categorization controller is hit");
   console.log(queue);
 
   // roundRobin
@@ -174,7 +173,7 @@ module.exports.categorizeEmails = async function (req, res) {
     const { email, round, nextPageToken } = queue.shift();
     // console.log("After removal:", queue);
 
-    const npt = await fetchAndPush(email, nextPageToken);
+    const npt = await fetchAndPush(email, nextPageToken, userId);
     const newRound = round + 1;
 
     // **Skip iteration if no nextPageToken AND rounds are still left**
@@ -194,4 +193,14 @@ module.exports.categorizeEmails = async function (req, res) {
     }
   }
   res.json({ message: "Emails categorized successfully" });
+};
+
+module.exports.checkRedis = async function (req, res) {
+  const email = req.email;
+
+  const size = await redisClient.llen(`emailCategory:${email}`);
+
+  return res.status(200).json({
+    size,
+  });
 };

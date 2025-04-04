@@ -1,12 +1,13 @@
 const { Worker } = require("bullmq");
 const { GoogleGenAI } = require("@google/genai");
 const redisClient = require("../../Redis");
-const { json } = require("express");
-
+const { getWss, sendToUser } = require("../../websocket");
+console.log;
 const emailWorker = new Worker(
   "emailQueue",
   async (job) => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const wss = getWss();
     // console.log("coming from the email worker", job.data.allEmails);
     const allEmail = job.data.allEmails
       .map(
@@ -37,7 +38,8 @@ const emailWorker = new Worker(
         }
       ]
     }
-    If no email body is found, categorize it as "Primary".
+    If no email body is found, categorize it as "Primary" and make the subject the subject is there.
+    
     Here are the emails:
     \n${allEmail}`;
 
@@ -79,7 +81,11 @@ const emailWorker = new Worker(
         ...processedEmails.map((ele) => JSON.stringify(ele))
       );
       await redisClient.expire(`emailCategory:${job.data.emaila}`, 900);
-      console.log("okay the length is ", length);
+      // console.log("okay the length is ", length);
+      sendToUser(job.data.userId, {
+        message: "please fetch the email again",
+        emailAccount: job.data.emaila,
+      });
     } catch (error) {
       console.error("Error parsing JSON:", error.message);
     }
