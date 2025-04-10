@@ -18,8 +18,6 @@ module.exports.parseEmail = function (emailList) {
       let body = "";
       if (email.payload.body && email.payload.body.data) {
         body = Buffer.from(email.payload.body.data, "base64").toString("utf-8");
-      } else {
-        console.warn(`No direct body found for email ID: ${email.id}`);
       }
 
       return {

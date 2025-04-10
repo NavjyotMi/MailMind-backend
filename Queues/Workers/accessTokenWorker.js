@@ -7,23 +7,24 @@ const accessTokenWorker = new Worker(
   "accessTokenQueue",
   async (job) => {
     try {
-      let at = await redisClient.get(`accesstoken:${job.data.email}`);
-      if (!at) {
-        const user = await LinkedAccount.findOne({
-          linkedEmail: job.data.email,
-        });
-        if (!user) {
-          console.log(`User not found for email: ${job.data.email}`);
-          return;
-        }
-        const refreshToken = decryptedToken(user.refreshToken);
-        const access_token = await getAccessToken(refreshToken);
-        if (access_token) {
-          await redisClient.set(`accesstoken:${job.data.email}`, access_token);
-          await redisClient.expire(`accesstoken:${job.data.email}`, 900);
-        } else {
-          console.log(`Failed to fetch new access token for ${job.data.email}`);
-        }
+      const user = await LinkedAccount.findOne({
+        linkedEmail: job.data.email,
+      });
+      if (!user) {
+        console.log(`User not found for email: ${job.data.email}`);
+        return;
+      }
+      const refreshToken = decryptedToken(user.refreshToken);
+      const access_token = await getAccessToken(refreshToken);
+      if (access_token) {
+        await redisClient.set(
+          `accesstoken:${job.data.email}`,
+          access_token,
+          "EX",
+          3600
+        );
+      } else {
+        console.log(`Failed to fetch new access token for ${job.data.email}`);
       }
     } catch (e) {
       console.log("there has been an error to fetch the access toekn");
@@ -33,5 +34,20 @@ const accessTokenWorker = new Worker(
     connection: redisClient,
   }
 );
+
+accessTokenWorker.on("drained", async () => {
+  console.log(
+    "All access token jobs drained. Closing worker to save Redis requests."
+  );
+  await accessTokenWorker.close();
+});
+
+accessTokenWorker.on("close", (err) => {
+  console.error("Worker closed:", err);
+});
+
+accessTokenWorker.on("error", (err) => {
+  console.error("Worker error:", err);
+});
 
 module.exports = accessTokenWorker;

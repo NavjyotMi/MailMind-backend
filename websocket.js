@@ -9,7 +9,7 @@ const setupWebSocket = (server) => {
     console.log("✅ Client Connected");
     console.log("websocket url ", request.url);
     const clientId = getUserIdFromRequest(request.url);
-    console.log(clientId);
+    console.log("client id is ", clientId);
 
     if (!clientId) {
       ws.close();

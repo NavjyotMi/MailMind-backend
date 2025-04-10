@@ -2,46 +2,71 @@ const { Worker } = require("bullmq");
 const { GoogleGenAI } = require("@google/genai");
 const redisClient = require("../../Redis");
 const { getWss, sendToUser } = require("../../websocket");
-console.log;
+
 const emailWorker = new Worker(
   "emailQueue",
   async (job) => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const wss = getWss();
-    // console.log("coming from the email worker", job.data.allEmails);
+
+    // console.log(job.data.allEmails);
     const allEmail = job.data.allEmails
       .map(
         (ele) =>
-          `id:${ele.id} snippet:${ele.snippet} labels:${ele.labels}  from: ${ele.from} date: ${ele.date} body:${ele.body}`
+          `id:${ele.id} subject:${ele.subject} snippet:${ele.snippet} labels:${ele.labels}  from: ${ele.from} date: ${ele.date} `
       )
       .join("\n\n");
-    const prompt = `You are an AI assistant that categorizes emails based on content. Classify the following emails into one of these categories:
-      - Work
-      - Personal
-      - Promotions
-      - Spam
-      - Social
-      - Important
-      - Primary (if no email body is found)
-    
-    Ensure that every email contains these fields:
+    // console.log(allEmail);
+    const prompt = `You are an AI assistant that categorizes emails based on content.
+You must return a valid JSON with this structure:
+{
+  "emails": [
     {
-      "emails": [
-        {
-          "snippet": "Email snippet 1",
-          "subject": "Extracted subject of the email (must be included)",
-          "category": "Work",
-          "id": "Email ID",
-          "labels": "Labels of the email",
-          "from": "Sender of the email",
-          "date": "Date of the email"
-        }
-      ]
+      "id": "email_id",
+      "subject": "Email subject(Required)",
+      "snippet": "Short summary",
+      "from": "Sender",
+      "date": "Date string",
+      "labels": "Comma-separated list",
+      "category": "Work | Personal | Promotions | Social | Important | Primary"
     }
-    If no email body is found, categorize it as "Primary" and make the subject the subject is there.
-    
-    Here are the emails:
-    \n${allEmail}`;
+  ]
+}
+---
+Here is an example:
+
+Input:
+[
+  {
+    "id": "123abc",
+    "snippet": "Meeting at 3PM",
+    "subject": "Team Meeting",
+    "from": "boss@company.com",
+    "date": "Mon, 7 Apr 2025 10:31:21 +0000",
+    "labels": ["INBOX"]
+    "body": body
+  }
+]
+
+Output:
+{
+  "emails": [
+    {
+      "id": "123abc",
+      "subject": "Team Meeting",
+      "snippet": "Meeting at 3PM",
+      "from": "boss@company.com",
+      "date": "Mon, 7 Apr 2025 10:31:21 +0000",
+      "labels": [labels],
+      "category": "Work"
+    }
+  ]
+}
+---
+
+Now classify the following:
+
+${JSON.stringify(allEmail, null, 2)}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
@@ -52,15 +77,13 @@ const emailWorker = new Worker(
       console.error("Failed to extract JSON from AI response:", response.text);
       return;
     }
-    console.log(
-      "this is from emailWorker: the email has been succesfully categorized"
-    );
     const jsonString = jsonMatch[1].trim();
 
     try {
       const parsedData = JSON.parse(jsonString);
       const processedEmails = parsedData.emails.map((email) => ({
         snippet: email.snippet,
+        subject: email.subject,
         category: email.category,
         from: email.from,
         date: email.date,
@@ -76,7 +99,7 @@ const emailWorker = new Worker(
         console.error(`Key ${key} is of type ${keyType}, deleting it.`);
         await redisClient.del(key);
       }
-      const length = await redisClient.rpush(
+      await redisClient.rpush(
         `emailCategory:${job.data.emaila}`,
         ...processedEmails.map((ele) => JSON.stringify(ele))
       );

@@ -1,8 +1,7 @@
 const parseMultipart = require("parse-multipart");
 
 module.exports.parseBatchResponse = async function (response) {
-  // 🔹 Step 1: Extract Boundary from Content-Type Header
-  const parts = response.split("--batch"); // Split into sections
+  const parts = response.split("--batch");
   const jsonResponses = [];
 
   for (const part of parts) {
