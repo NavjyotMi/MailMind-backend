@@ -11,7 +11,9 @@ const addToEmailQueue = catchAsync(async (job) => {
     removeOnComplete: true,
     removeOnFail: true,
   });
-  console.log("the categorization job has been added");
+  console.log(
+    "the categorization job has been added to the email cateogrization"
+  );
 });
 // const cleanup = async function () {
 //   await emailQueue.clean(0, 10000, "waiting");

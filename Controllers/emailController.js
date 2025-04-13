@@ -205,6 +205,7 @@ module.exports.summarize = catchAsync(async (req, res) => {
 });
 
 module.exports.categorizeEmails = catchAsync(async (req, res) => {
+  console.log("categorizeEmail endpoint ishit");
   const emailList = req.body.body.emailList;
   const userId = req.email;
   if (!Array.isArray(emailList) || emailList.length === 0) {

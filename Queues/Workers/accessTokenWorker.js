@@ -26,6 +26,9 @@ const accessTokenWorker = new Worker(
       } else {
         console.log(`Failed to fetch new access token for ${job.data.email}`);
       }
+      console.log(
+        "the access token is added to the redis this is from access token worker"
+      );
     } catch (e) {
       console.log("there has been an error to fetch the access toekn");
     }

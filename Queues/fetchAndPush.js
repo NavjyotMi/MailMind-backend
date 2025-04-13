@@ -7,7 +7,7 @@ const catchAsync = require("../utils/catAsync");
 module.exports.fetchAndPush = catchAsync(
   async (email, nextPageToken, userId) => {
     // fetch the access token
-    // console.log("or firs and forget hit first");
+    console.log("is fetch and push hit");
     const access_token = await redisClient.get(`accesstoken:${email}`);
     // modify the url based on nextpagetoken
     let GMAIL_URL =

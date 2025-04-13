@@ -119,7 +119,7 @@ module.exports.getUser = catchAsync(async (req, res) => {
   if (user.linkedAccounts && user.linkedAccounts.length > 0) {
     for (const element of user.linkedAccounts) {
       const at = await redisClient.get(`accesstoken:${element.email}`);
-      console.log(at);
+      console.log("this is from the adding the email to the queue", at);
       if (!at) addAccessTokenQueue({ email: element.email });
     }
   }
