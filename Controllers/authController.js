@@ -99,8 +99,8 @@ module.exports.LoginUser = catchAsync(async (req, res) => {
 
   res.cookie("accesstoken", jwt, {
     httpOnly: true,
-    secure: false,
-    sameSite: "Lax", // Prevent CSRF attacks
+    secure: true,
+    sameSite: "None", // Prevent CSRF attacks
   });
 
   res.redirect(CLIENT_REDIRECT);
