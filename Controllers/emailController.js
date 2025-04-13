@@ -161,6 +161,8 @@ module.exports.getSingleEmail = catchAsync(async (req, res) => {
       throw new AppError(400, `Failed to fetch email with ID: ${messageid}`);
     });
 
+  // console.log(data.data);
+
   const parsedData = parseSingleEmail(data.data);
 
   res.status(200).json({

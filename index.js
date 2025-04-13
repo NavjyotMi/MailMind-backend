@@ -44,7 +44,7 @@ app.use((req, res, next) => {
     message: "Route not found",
   });
 });
-server.listen(5000, () => {
+server.listen(process.env.PORT, () => {
   console.log("Server running on http://localhost:5000");
 });
 
