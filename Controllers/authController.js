@@ -44,6 +44,7 @@ const CLIENT_REDIRECT = process.env.MAIN_ACCOUNT_REDIRECT_URI;
 module.exports.LoginUser = catchAsync(async (req, res) => {
   const code = req.query.code;
   if (!code) throw new AppError(400, "The code is missing ");
+  console.log("ther server is hit");
 
   // Exchange the code for an access token from Google's OAuth2 endpoint
   const { data } = await axios.post(
