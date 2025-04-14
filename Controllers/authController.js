@@ -230,8 +230,8 @@ module.exports.addAccount = catchAsync(async (req, res) => {
   // Set the new JWT as a cookie
   res.cookie("accesstoken", jwt, {
     httpOnly: true,
-    secure: false,
-    sameSite: "Lax",
+    secure: true,
+    sameSite: "None",
   });
   return res.redirect(CLIENT_REDIRECT);
 });
