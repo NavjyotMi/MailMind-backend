@@ -38,16 +38,16 @@ const accessTokenWorker = new Worker(
   }
 );
 
-accessTokenWorker.on("drained", async () => {
-  console.log(
-    "All access token jobs drained. Closing worker to save Redis requests."
-  );
-  await accessTokenWorker.close();
-});
+// accessTokenWorker.on("drained", async () => {
+//   console.log(
+//     "All access token jobs drained. Closing worker to save Redis requests."
+//   );
+//   await accessTokenWorker.close();
+// });
 
-accessTokenWorker.on("close", (err) => {
-  console.error("Worker closed:", err);
-});
+// accessTokenWorker.on("close", (err) => {
+//   console.error("Worker closed:", err);
+// });
 
 accessTokenWorker.on("error", (err) => {
   console.error("Worker error:", err);
