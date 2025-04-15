@@ -28,6 +28,7 @@ Inboxes today are digital war zones:
 ![ScreenShot](https://i.imgur.com/RrgsG78.png)
 
 ![ScreenShot](https://i.imgur.com/TFUfnZO.png)
+![ScreenShot](https://i.imgur.com/4EHCbdL.png)
 
 ### Video Demo
 [View Demo](https://youtu.be/4PCUY1yUOOg)
